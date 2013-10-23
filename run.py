@@ -4,15 +4,15 @@ import sys, time
 import dynaroach as dr
 
 try:
-    infile = sys.argv[1]
+    infile = sys.argv[2]
     
-    if len(sys.argv) > 2:
-        dir = sys.argv[2]
+    if len(sys.argv) > 3:
+        dir = sys.argv[3]
         save = True
     else:
         save = False
     
-    r = dr.DynaRoach()
+    r = dr.DynaRoach(sys.argv[1])
     
     if save:
         r.run_gyro_calib()
@@ -25,11 +25,10 @@ try:
     t = dr.Trial()
     t.load_from_file(infile)
     r.configure_trial(t)
-    
+    ds = dr.datestring()
     if save:
-        ds = dr.datestring()
         t.save_to_file('./' + dir + '/' + ds + '_cfg',
-                       gyro_offsets=r.gyro_offsets, rid=eval(open('rid.py').read()))
+                        gyro_offsets=r.gyro_offsets, rid=eval(open('rid.py').read()))
     
     
     print("Press any key to begin clearing memory.")
@@ -54,10 +53,11 @@ try:
         input = raw_input()
         if input == 'q':
             r.__del__()
+            pass
     
         r.save_trial_data('./' + dir + '/' + ds + '_mcu.csv')
 except Exception as e:
-    print('Caught the following exception: ' + e)
+    print('Caught the following exception: ' + str(e))
 finally:
     r.__del__()
     print('Fin')
