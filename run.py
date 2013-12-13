@@ -30,16 +30,6 @@ try:
         t.save_to_file('./' + dir + '/' + ds + '_cfg',
                         gyro_offsets=r.gyro_offsets, rid=eval(open('rid.py').read()))
     
-    
-    print("Press any key to begin clearing memory.")
-    raw_input()
-    
-    r.erase_mem_sector(0x100)
-    time.sleep(1)
-    r.erase_mem_sector(0x200)
-    time.sleep(1)
-    r.erase_mem_sector(0x300)
-    
     print("Press any key to start the trial running.")
     raw_input()
     
@@ -56,6 +46,7 @@ try:
             pass
     
         r.save_trial_data('./' + dir + '/' + ds + '_mcu.csv')
+    r.reset()
 except Exception as e:
     print('Caught the following exception: ' + str(e))
 finally:
