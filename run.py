@@ -1,9 +1,30 @@
 #!/usr/bin/python
+"""
+Example: python run.py COM14 70x70 test
+arg1 --> Robot address COM14
+arg2 --> config file for the trial, 70x70.csv
+arg3 --> output dir test
+"""
 
 import sys, time
 import dynaroach as dr
 
+import natnethelper as nt
+import NatNet
+
+r = None
 try:
+    if len(sys.argv) != 4:
+        print "Please input 3 arguments:"
+        print "python run.py <robot_adress> <config file> <output_dir>"
+        print "Example: python run.py COM14 70x70.csv test"
+        sys.exit(1)
+    #collect data and run the robot switch
+    run_robot = True
+
+    nat_net_client = NatNet.NatNetClient(1);
+    nat_net_client.Initialize("","");
+
     infile = sys.argv[2]
     
     if len(sys.argv) > 3:
@@ -11,52 +32,69 @@ try:
         save = True
     else:
         save = False
-    
-    r = dr.DynaRoach(sys.argv[1])
-    
-    if save:
-        r.run_gyro_calib()
-        print("Running gyro calibration...")
-        raw_input()
-        r.get_gyro_calib_param()
-        time.sleep(0.5)
-    
-    
-    t = dr.Trial()
-    t.load_from_file(infile)
-    r.configure_trial(t)
     ds = dr.datestring()
-    if save:
-        t.save_to_file('./' + dir + '/' + ds + '_cfg',
-                        gyro_offsets=r.gyro_offsets, rid=eval(open('rid.py').read()))
-    print("Press any key to begin clearing memory.")
-    raw_input()
+
+    if run_robot:
+        r = dr.DynaRoach(sys.argv[1])
+        
+        if save:
+            r.run_gyro_calib()
+            print("Running gyro calibration...")
+            raw_input()
+            r.get_gyro_calib_param()
+            time.sleep(0.5)
+            t.save_to_file('./' + dir + '/' + ds + '_cfg',
+                gyro_offsets=r.gyro_offsets, rid=eval(open('rid.py').read()))
+
+        print("Press any key to begin clearing memory.")
+        raw_input()
+        
+        r.erase_mem_sector(0x100)
+        time.sleep(1)
+        r.erase_mem_sector(0x200)
+        time.sleep(1)
+        r.erase_mem_sector(0x300)       
+
+        t = dr.Trial()
+        t.load_from_file(infile)
+        r.configure_trial(t)
     
-    r.erase_mem_sector(0x100)
-    time.sleep(1)
-    r.erase_mem_sector(0x200)
-    time.sleep(1)
-    r.erase_mem_sector(0x300)
-    
+        if save:
+            t.save_to_file('./' + dir + '/' + ds + '_cfg',
+                            gyro_offsets=r.gyro_offsets, rid=eval(open('rid.py').read()))
+
     print("Press any key to start the trial running.")
     raw_input()
-    
-    r.run_trial()
+    print("Starting Motion Capture") 
+    mocap_data = nt.start_collection(nat_net_client)
+    if run_robot:
+        r.run_trial()
     print("Press any key to request the mcu data from the robot.")
     raw_input()
+    print("Stopping mocap collection");
+    nt.stop_collection(nat_net_client);
     
     if save:
-        r.transmit_saved_data()
-        print("Press any key to save transmitted data to a file.")
-        input = raw_input()
-        if input == 'q':
-            r.__del__()
-            pass
-    
-        r.save_trial_data('./' + dir + '/' + ds + '_mcu.csv')
-    r.reset()
+        if run_robot:
+            r.transmit_saved_data()
+            print("Press any key when data is done transmitting.")
+            input = raw_input()
+            if input == 'q':
+                r.__del__()
+                pass
+        
+            r.save_trial_data('./' + dir + '/' + ds + '_mcu.csv')
+            """r.erase_mem_sector(0x100)
+            time.sleep(1)
+            r.erase_mem_sector(0x200)
+            time.sleep(1)
+            r.erase_mem_sector(0x300)
+            time.sleep(1) """
+            r.reset()
+        nt.csv_from_data(nat_net_client, mocap_data, './' + dir + '/' + ds + '_mocap.csv');
 except Exception as e:
     print('Caught the following exception: ' + str(e))
 finally:
-    r.__del__()
+    if r:
+        r.__del__()
     print('Fin')
