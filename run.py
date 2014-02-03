@@ -44,19 +44,14 @@ try:
         if save:
             r.run_gyro_calib()
             print("Running gyro calibration...")
-            raw_input()
+            time.sleep(0.5)
             r.get_gyro_calib_param()
             time.sleep(0.5)
 
-        print("Press any key to begin clearing memory.")
-        raw_input()
-        
-        r.erase_mem_sector(0x100)
-        time.sleep(1)
-        r.erase_mem_sector(0x200)
-        time.sleep(1)
-        r.erase_mem_sector(0x300)       
-        time.sleep(1)
+        while r.gyro_offsets == None:
+            print "Waiting on gyro offset"
+            time.sleep(2)
+        print "Received gyro offset"
 
         t = dr.Trial()
         if save:
