@@ -6,11 +6,15 @@ arg2 --> config file for the trial, 70x70.csv
 arg3 --> output dir test
 """
 
+run_robot = True
+run_mocap = False
+
 import sys, time
 import dynaroach as dr
 
-import natnethelper as nt
-import NatNet
+if run_mocap:
+    import natnethelper as nt
+    import NatNet
 
 r = None
 try:
@@ -20,10 +24,10 @@ try:
         print "Example: python run.py COM14 70x70.csv test"
         sys.exit(1)
     #collect data and run the robot switch
-    run_robot = True
 
-    nat_net_client = NatNet.NatNetClient(1);
-    nat_net_client.Initialize("","");
+    if run_mocap:
+        nat_net_client = NatNet.NatNetClient(1);
+        nat_net_client.Initialize("","");
 
     infile = sys.argv[2]
     
@@ -43,8 +47,6 @@ try:
             raw_input()
             r.get_gyro_calib_param()
             time.sleep(0.5)
-            t.save_to_file('./' + dir + '/' + ds + '_cfg',
-                gyro_offsets=r.gyro_offsets, rid=eval(open('rid.py').read()))
 
         print("Press any key to begin clearing memory.")
         raw_input()
@@ -54,8 +56,12 @@ try:
         r.erase_mem_sector(0x200)
         time.sleep(1)
         r.erase_mem_sector(0x300)       
+        time.sleep(1)
 
         t = dr.Trial()
+        if save:
+            t.save_to_file('./' + dir + '/' + ds + '_cfg',
+                gyro_offsets=r.gyro_offsets, rid=eval(open('rid.py').read()))
         t.load_from_file(infile)
         r.configure_trial(t)
     
@@ -65,14 +71,16 @@ try:
 
     print("Press any key to start the trial running.")
     raw_input()
-    print("Starting Motion Capture") 
-    mocap_data = nt.start_collection(nat_net_client)
+    if run_mocap:
+        print("Starting Motion Capture") 
+        mocap_data = nt.start_collection(nat_net_client)
     if run_robot:
         r.run_trial()
     print("Press any key to request the mcu data from the robot.")
     raw_input()
-    print("Stopping mocap collection");
-    nt.stop_collection(nat_net_client);
+    if run_mocap:
+        print("Stopping mocap collection");
+        nt.stop_collection(nat_net_client);
     
     if save:
         if run_robot:
@@ -82,16 +90,16 @@ try:
             if input == 'q':
                 r.__del__()
                 pass
-        
             r.save_trial_data('./' + dir + '/' + ds + '_mcu.csv')
-            """r.erase_mem_sector(0x100)
+            r.erase_mem_sector(0x100)
             time.sleep(1)
             r.erase_mem_sector(0x200)
             time.sleep(1)
             r.erase_mem_sector(0x300)
-            time.sleep(1) """
+            time.sleep(1)
             r.reset()
-        nt.csv_from_data(nat_net_client, mocap_data, './' + dir + '/' + ds + '_mocap.csv');
+        if run_mocap:
+            nt.csv_from_data(nat_net_client, mocap_data, './' + dir + '/' + ds + '_mocap.csv');
 except Exception as e:
     print('Caught the following exception: ' + str(e))
 finally:
