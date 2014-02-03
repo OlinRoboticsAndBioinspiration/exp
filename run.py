@@ -97,7 +97,7 @@ try:
             time.sleep(1)
             r.erase_mem_sector(0x300)
             time.sleep(1)
-            r.reset()
+            r.reset(do_wait=False)
         if run_mocap:
             nt.csv_from_data(nat_net_client, mocap_data, './' + dir + '/' + ds + '_mocap.csv');
 except Exception as e:
