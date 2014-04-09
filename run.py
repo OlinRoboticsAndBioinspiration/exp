@@ -51,18 +51,17 @@ try:
         while r.gyro_offsets == None:
             print "Waiting on gyro offset"
             time.sleep(2)
+        print ("got and waiting")
+        raw_input()
         print "Received gyro offset"
 
         t = dr.Trial()
         if save:
             t.save_to_file('./' + dir + '/' + ds + '_cfg',
-                gyro_offsets=r.gyro_offsets, rid=eval(open('rid.py').read()))
+                gyro_offsets=r.gyro_offsets, rid=eval(open('rid.py').read()),
+                cfg_file=infile, cfg_contents=open(infile, "r+").read())
         t.load_from_file(infile)
         r.configure_trial(t)
-    
-        if save:
-            t.save_to_file('./' + dir + '/' + ds + '_cfg',
-                            gyro_offsets=r.gyro_offsets, rid=eval(open('rid.py').read()))
 
     print("Press any key to start the trial running.")
     raw_input()
