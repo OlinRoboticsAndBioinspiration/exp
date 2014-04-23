@@ -7,8 +7,7 @@ arg3 --> output dir test
 """
 
 run_robot = True
-run_mocap = False
-
+run_mocap = True
 import sys, time
 import dynaroach as dr
 
