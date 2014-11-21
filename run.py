@@ -8,6 +8,7 @@ arg3 --> output dir test
 
 run_robot = True
 run_mocap = False
+run_gyro_config = False
 
 import sys, time
 import dynaroach as dr
@@ -42,18 +43,24 @@ try:
         r = dr.DynaRoach(sys.argv[1])
         
         if save:
-            r.run_gyro_calib()
-            print("Running gyro calibration...")
-            time.sleep(0.5)
-            r.get_gyro_calib_param()
-            time.sleep(0.5)
+            if run_gyro_config:
+                r.run_gyro_calib()
+                print("Running gyro calibration...")
+                time.sleep(0.5)
+                r.get_gyro_calib_param()
+                time.sleep(0.5)
 
-        while r.gyro_offsets == None:
+        while run_gyro_config and r.gyro_offsets == None:
             print "Waiting on gyro offset"
             time.sleep(2)
-        print ("got and waiting")
-        raw_input()
-        print "Received gyro offset"
+
+        if run_gyro_config:
+            print ("got and waiting")
+            raw_input()
+            print "Received gyro offset"
+        else:
+            # fake some data
+            r.gyro_offsets = [0, 0, 0]
 
         t = dr.Trial()
         if save:
