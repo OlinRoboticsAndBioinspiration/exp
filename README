@@ -38,4 +38,6 @@ Ensure tests/test.csv has some frames in it.
 
 System should be good to go, run run.py
 
+For stable a stable phase, care has to be taken when initialy powering on the robot
+as well as magnet orientation. 
 
